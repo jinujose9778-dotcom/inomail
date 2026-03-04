@@ -18,7 +18,7 @@ function UserDashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [search, setSearch] = useState("");
   const [preview, setPreview] = useState(null);
-
+  const [collapsed, setCollapsed] = useState(false);
   useEffect(() => {
     if (role !== "user") navigate("/login");
   }, [role, navigate]);
@@ -99,36 +99,74 @@ function UserDashboard() {
   return (
     <div className="user-wrapper">
       {/* SIDEBAR */}
-      <aside className="user-sidebar">
-        <div>
-          <h2 className="logo">InoMail</h2>
-          <p className="org">{organization}</p>
-        </div>
+<aside className={`user-sidebar ${collapsed ? "collapsed" : ""}`}>
+  
+  {/* TOP SECTION */}
+  <div className="sidebar-top">
+    <div className="logo-area">
+      <h2 className="logo">InoMail</h2>
+      {!collapsed && <p className="org">{organization}</p>}
+    </div>
 
-        <nav className="user-menu">
-          <button onClick={() => setActiveTab("dashboard")}>📊 Dashboard</button>
+    <button
+      className="collapse-btn"
+      onClick={() => setCollapsed(!collapsed)}
+    >
+      {collapsed ? "➡" : "⬅"}
+    </button>
+  </div>
 
-          {permissions.canSendEmails && (
-            <button onClick={() => setActiveTab("create")}>✉ Send Email</button>
-          )}
+  {/* MENU */}
+  <nav className="user-menu">
+    <button
+      className={activeTab === "dashboard" ? "active" : ""}
+      onClick={() => setActiveTab("dashboard")}
+    >
+      📊 {!collapsed && "Dashboard"}
+    </button>
 
-          {permissions.canViewHistory && (
-            <button onClick={() => setActiveTab("history")}>📁 History</button>
-          )}
+    {permissions.canSendEmails && (
+      <button
+        className={activeTab === "create" ? "active" : ""}
+        onClick={() => setActiveTab("create")}
+      >
+        ✉ {!collapsed && "Send Email"}
+      </button>
+    )}
 
-          {permissions.canUseTemplates && (
-            <button onClick={() => setActiveTab("templates")}>🧩 Templates</button>
-          )}
+    {permissions.canViewHistory && (
+      <button
+        className={activeTab === "history" ? "active" : ""}
+        onClick={() => setActiveTab("history")}
+      >
+        📁 {!collapsed && "History"}
+      </button>
+    )}
 
-          {permissions.canAccessAssets && (
-            <button onClick={() => setActiveTab("assets")}>📦 Assets</button>
-          )}
-        </nav>
+    {permissions.canUseTemplates && (
+      <button
+        className={activeTab === "templates" ? "active" : ""}
+        onClick={() => setActiveTab("templates")}
+      >
+        🧩 {!collapsed && "Templates"}
+      </button>
+    )}
 
-        <button className="logout-btn" onClick={logout}>
-          🔒 Logout
-        </button>
-      </aside>
+    {permissions.canAccessAssets && (
+      <button
+        className={activeTab === "assets" ? "active" : ""}
+        onClick={() => setActiveTab("assets")}
+      >
+        📦 {!collapsed && "Assets"}
+      </button>
+    )}
+  </nav>
+
+  {/* LOGOUT */}
+  <button className="logout-btn" onClick={logout}>
+    🔒 {!collapsed && "Logout"}
+  </button>
+</aside>
 
       {/* MAIN */}
       <main className="user-main">

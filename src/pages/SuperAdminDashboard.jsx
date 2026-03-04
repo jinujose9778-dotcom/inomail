@@ -6,155 +6,191 @@ function SuperAdminDashboard() {
   const role = localStorage.getItem("role");
 
   const [activeTab, setActiveTab] = useState("overview");
-  const [showForm, setShowForm] = useState(false);
-  const [editIndex, setEditIndex] = useState(null);
+  const [collapsed, setCollapsed] = useState(false);
   const [search, setSearch] = useState("");
 
-  /* ===== AUTH ===== */
   useEffect(() => {
     if (role !== "superadmin") navigate("/login");
   }, [role, navigate]);
 
-  /* ===== USERS ===== */
+  /* ================= USERS ================= */
   const [users, setUsers] = useState([
-    {
-      name: "Akhil",
-      email: "akhil@gmail.com",
-      role: "user",
-      status: "Active",
-      lastLogin: "2 hours ago",
-    },
-    {
-      name: "Admin One",
-      email: "admin@inomail.com",
-      role: "admin",
-      status: "Active",
-      lastLogin: "Yesterday",
-    },
-    {
-      name: "Admin Two",
-      email: "admin2@inomail.com",
-      role: "admin",
-      status: "Blocked",
-      lastLogin: "5 days ago",
-    },
+    { id: 1, name: "John Doe", email: "john@mail.com", role: "user", status: "Active" },
+    { id: 2, name: "Emma Smith", email: "emma@mail.com", role: "admin", status: "Active" },
   ]);
 
-  const [logs, setLogs] = useState([
-    "Super Admin logged in",
-    "Admin Two blocked",
+  const deleteUser = (id) => setUsers(users.filter((u) => u.id !== id));
+
+  const toggleUserStatus = (id) =>
+    setUsers(users.map((u) =>
+      u.id === id
+        ? { ...u, status: u.status === "Active" ? "Locked" : "Active" }
+        : u
+    ));
+
+  const updateUserRole = (id, newRole) =>
+    setUsers(users.map((u) => (u.id === id ? { ...u, role: newRole } : u)));
+
+  /* ================= ORGANIZATIONS ================= */
+  const [orgs, setOrgs] = useState([
+    { id: 1, name: "InoTech", users: 12, status: "Active" },
+    { id: 2, name: "NextGen", users: 7, status: "Active" },
   ]);
 
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    role: "user",
-    status: "Active",
-  });
+  const deleteOrg = (id) => setOrgs(orgs.filter((o) => o.id !== id));
 
-  /* ===== STATS ===== */
-  const totalUsers = users.filter(u => u.role === "user").length;
-  const totalAdmins = users.filter(u => u.role === "admin").length;
-  const activeAccounts = users.filter(u => u.status === "Active").length;
-  const blockedAccounts = users.filter(u => u.status === "Blocked").length;
+  /* ================= CAMPAIGNS ================= */
+  const [campaigns, setCampaigns] = useState([
+    { id: 1, name: "Summer Sale", org: "InoTech", status: "Sent" },
+    { id: 2, name: "Winter Offer", org: "NextGen", status: "Draft" },
+  ]);
 
-  /* ===== FILTER ===== */
-  const filteredUsers = users.filter(u =>
-    u.name.toLowerCase().includes(search.toLowerCase()) ||
-    u.email.toLowerCase().includes(search.toLowerCase())
-  );
+  const deleteCampaign = (id) =>
+    setCampaigns(campaigns.filter((c) => c.id !== id));
 
-  /* ===== ACTIONS ===== */
   const logout = () => {
     localStorage.clear();
     navigate("/login");
   };
 
-  const openCreate = () => {
-    setForm({ name: "", email: "", role: "user", status: "Active" });
-    setEditIndex(null);
-    setShowForm(true);
-  };
-
-  const saveUser = () => {
-    if (!form.name || !form.email) {
-      alert("All fields required");
-      return;
-    }
-
-    if (editIndex !== null) {
-      const updated = [...users];
-      updated[editIndex] = form;
-      setUsers(updated);
-      setLogs(prev => [`Updated ${form.email}`, ...prev]);
-    } else {
-      setUsers([...users, { ...form, lastLogin: "Never" }]);
-      setLogs(prev => [`Created ${form.email}`, ...prev]);
-    }
-
-    setShowForm(false);
-  };
-
-  const editUser = (index) => {
-    setForm(users[index]);
-    setEditIndex(index);
-    setShowForm(true);
-  };
-
-  const deleteUser = (index) => {
-    if (window.confirm("Delete this account?")) {
-      setLogs(prev => [`Deleted ${users[index].email}`, ...prev]);
-      setUsers(users.filter((_, i) => i !== index));
-    }
-  };
-
-  const toggleStatus = (index) => {
-    const updated = [...users];
-    updated[index].status =
-      updated[index].status === "Active" ? "Blocked" : "Active";
-    setUsers(updated);
-    setLogs(prev => [`Status changed for ${updated[index].email}`, ...prev]);
-  };
-
-  const loginAs = (user) => {
-    localStorage.setItem("email", user.email);
-    localStorage.setItem("role", user.role);
-    navigate(user.role === "admin" ? "/admin-dashboard" : "/user-dashboard");
-  };
-
   return (
     <div className="super-wrapper">
 
-      {/* SIDEBAR */}
-      <aside className="super-sidebar">
-        <h2 className="logo">InoMail</h2>
-        <p className="subtitle">Super Admin</p>
+     {/* ================= ULTRA PREMIUM SIDEBAR ================= */}
+<aside className={`super-sidebar ${collapsed ? "collapsed" : ""}`}>
 
-        <button onClick={() => setActiveTab("overview")} className={activeTab==="overview"?"active":""}>📊 Overview</button>
-        <button onClick={() => setActiveTab("users")} className={activeTab==="users"?"active":""}>👥 Users</button>
-        <button onClick={() => setActiveTab("logs")} className={activeTab==="logs"?"active":""}>📜 Audit Logs</button>
-        <button onClick={() => setActiveTab("settings")} className={activeTab==="settings"?"active":""}>⚙ Settings</button>
+  {/* LOGO */}
+  <div className="super-logo">
+    <div className="logo-icon">⚡</div>
+    {!collapsed && (
+      <div className="logo-text">
+        <h2>InoMail</h2>
+        <span>SuperAdmin</span>
+      </div>
+    )}
+  </div>
 
-        <button className="logout-btn" onClick={logout}>Logout</button>
-      </aside>
+  {/* COLLAPSE BUTTON */}
+  <button
+    className="collapse-btn"
+    onClick={() => setCollapsed(!collapsed)}
+  >
+    {collapsed ? "➡" : "⬅"}
+  </button>
 
-      {/* MAIN */}
+  {/* NAVIGATION */}
+  <nav className="super-menu">
+
+    <button
+      className={activeTab === "overview" ? "menu-item active" : "menu-item"}
+      onClick={() => setActiveTab("overview")}
+    >
+      <span className="menu-icon">📊</span>
+      {!collapsed && <span>Overview</span>}
+    </button>
+
+    <button
+      className={activeTab === "users" ? "menu-item active" : "menu-item"}
+      onClick={() => setActiveTab("users")}
+    >
+      <span className="menu-icon">👥</span>
+      {!collapsed && <span>Users</span>}
+    </button>
+
+    <button
+      className={activeTab === "organizations" ? "menu-item active" : "menu-item"}
+      onClick={() => setActiveTab("organizations")}
+    >
+      <span className="menu-icon">🏢</span>
+      {!collapsed && <span>Organizations</span>}
+    </button>
+
+    <button
+      className={activeTab === "campaigns" ? "menu-item active" : "menu-item"}
+      onClick={() => setActiveTab("campaigns")}
+    >
+      <span className="menu-icon">📧</span>
+      {!collapsed && <span>Campaigns</span>}
+    </button>
+
+    <button
+      className={activeTab === "system" ? "menu-item active" : "menu-item"}
+      onClick={() => setActiveTab("system")}
+    >
+      <span className="menu-icon">⚙</span>
+      {!collapsed && <span>System</span>}
+    </button>
+
+  </nav>
+
+  {/* LOGOUT */}
+  <button className="logout-btn" onClick={logout}>
+    🔒 {!collapsed && "Logout"}
+  </button>
+
+</aside>
+
+      {/* ================= MAIN ================= */}
       <main className="super-main">
 
-        {/* OVERVIEW */}
+        {/* TOPBAR */}
+        <div className="super-topbar">
+          <h1>🚀 SuperAdmin Control Center</h1>
+          <input
+            placeholder="🔍 Global search..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
+        {/* ================= OVERVIEW ================= */}
         {activeTab === "overview" && (
           <>
-            <div className="stats-grid">
-              <div className="stat-card blue"><h4>Total Users</h4><p>{totalUsers}</p></div>
-              <div className="stat-card purple"><h4>Total Admins</h4><p>{totalAdmins}</p></div>
-              <div className="stat-card green"><h4>Active</h4><p>{activeAccounts}</p></div>
-              <div className="stat-card red"><h4>Blocked</h4><p>{blockedAccounts}</p></div>
+            <div className="super-hero">
+              <div>
+                <h2>Platform Control Dashboard</h2>
+                <p>Monitor the entire system in real-time</p>
+              </div>
+              <div className="live-status">
+                <span className="pulse-dot"></span>
+                LIVE SYSTEM
+              </div>
             </div>
 
-            <div className="health-grid">
-              <div className="health-card">📧 SMTP: Connected</div>
-              <div className="health-card">📦 Storage: 62%</div>
-              <div className="health-card">🚀 Queue: Running</div>
+            <div className="super-grid">
+              <div className="super-card blue">
+                <div className="card-icon">👥</div>
+                <h3>Total Users</h3>
+                <p>{users.length}</p>
+              </div>
+
+              <div className="super-card green">
+                <div className="card-icon">🏢</div>
+                <h3>Total Organizations</h3>
+                <p>{orgs.length}</p>
+              </div>
+
+              <div className="super-card purple">
+                <div className="card-icon">📧</div>
+                <h3>Total Campaigns</h3>
+                <p>{campaigns.length}</p>
+              </div>
+
+              <div className="super-card orange">
+                <div className="card-icon">💰</div>
+                <h3>Revenue</h3>
+                <p>$12,480</p>
+              </div>
+            </div>
+
+            <div className="activity-panel">
+              <h3>🕒 Platform Activity</h3>
+              <ul>
+                <li>✔ New organization registered</li>
+                <li>✔ Campaign deleted</li>
+                <li>✔ SMTP restarted</li>
+                <li>✔ Database backup completed</li>
+              </ul>
             </div>
           </>
         )}
@@ -162,96 +198,56 @@ function SuperAdminDashboard() {
         {/* USERS */}
         {activeTab === "users" && (
           <>
-            <div className="super-header">
-              <input
-                placeholder="Search users..."
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-              />
-              <button className="primary-btn" onClick={openCreate}>+ Create User</button>
-            </div>
-
-            <div className="table-card">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Status</th>
-                    <th>Last Login</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredUsers.map((u, i) => (
-                    <tr key={i}>
+            <h2>User Management</h2>
+            <table className="super-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users
+                  .filter((u) =>
+                    u.name.toLowerCase().includes(search.toLowerCase())
+                  )
+                  .map((u) => (
+                    <tr key={u.id}>
                       <td>{u.name}</td>
                       <td>{u.email}</td>
-                      <td>{u.role}</td>
-                      <td className={u.status==="Active"?"success":"warning"}>{u.status}</td>
-                      <td>{u.lastLogin}</td>
                       <td>
-                        <button onClick={()=>editUser(i)}>Edit</button>
-                        <button onClick={()=>toggleStatus(i)}>Toggle</button>
-                        <button onClick={()=>loginAs(u)}>Login As</button>
-                        <button className="danger" onClick={()=>deleteUser(i)}>Delete</button>
+                        <select
+                          value={u.role}
+                          onChange={(e) =>
+                            updateUserRole(u.id, e.target.value)
+                          }
+                        >
+                          <option value="user">User</option>
+                          <option value="admin">Admin</option>
+                          <option value="superadmin">SuperAdmin</option>
+                        </select>
+                      </td>
+                      <td>
+                        <span className={`status ${u.status.toLowerCase()}`}>
+                          {u.status}
+                        </span>
+                      </td>
+                      <td>
+                        <button onClick={() => toggleUserStatus(u.id)}>
+                          {u.status === "Active" ? "Lock" : "Unlock"}
+                        </button>
+                        <button onClick={() => deleteUser(u.id)}>
+                          Delete
+                        </button>
                       </td>
                     </tr>
                   ))}
-                </tbody>
-              </table>
-            </div>
+              </tbody>
+            </table>
           </>
-        )}
-
-        {/* AUDIT LOGS */}
-        {activeTab === "logs" && (
-          <div className="logs-card">
-            <h2>Audit Logs</h2>
-            <ul>
-              {logs.map((log, i) => <li key={i}>{log}</li>)}
-            </ul>
-          </div>
-        )}
-
-        {/* SETTINGS */}
-        {activeTab === "settings" && (
-          <div className="settings-card">
-            <h2>Platform Settings</h2>
-            <label>Maintenance Mode</label>
-            <select><option>Disabled</option><option>Enabled</option></select>
-
-            <label>Default Role</label>
-            <select><option>User</option><option>Admin</option></select>
-
-            <button className="primary-btn">Save Settings</button>
-          </div>
-        )}
-
-        {/* MODAL */}
-        {showForm && (
-          <div className="modal-backdrop">
-            <div className="modal-card">
-              <h2>{editIndex!==null?"Edit User":"Create User"}</h2>
-
-              <input placeholder="Name" value={form.name}
-                onChange={e=>setForm({...form,name:e.target.value})} />
-              <input placeholder="Email" value={form.email}
-                onChange={e=>setForm({...form,email:e.target.value})} />
-              <select value={form.role}
-                onChange={e=>setForm({...form,role:e.target.value})}>
-                <option value="user">User</option>
-                <option value="admin">Admin</option>
-                <option value="superadmin">Super Admin</option>
-              </select>
-
-              <div className="modal-actions">
-                <button className="primary-btn" onClick={saveUser}>Save</button>
-                <button className="secondary-btn" onClick={()=>setShowForm(false)}>Cancel</button>
-              </div>
-            </div>
-          </div>
         )}
 
       </main>
